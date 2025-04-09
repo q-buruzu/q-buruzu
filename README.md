@@ -1,2 +1,2 @@
-# Q-BURUZU
+# q-buruzu
 zesty
