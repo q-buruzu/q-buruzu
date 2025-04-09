@@ -1,2 +1,3 @@
 # q-buruzu
-zesty
+
+quantum simulation in c++
