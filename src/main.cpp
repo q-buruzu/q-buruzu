@@ -1,6 +1,7 @@
-#include "file.h"
+#include "matrix.h"
 
 int main() {
-	world();
+	Matrix A({{{0, 0}, {0, 1}}, {{1, 0}, {1, 1}}});
+	A.print();
 	return 0;
 }
