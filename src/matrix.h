@@ -1,38 +1,35 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include <iostream>
-#include <cmath>
-#include <vector>
 #include <complex>
+#include <vector>
 
 class Matrix {
-public:
-    Matrix(std::vector<std::vector<std::complex<double>>> initMatrix);
-    Matrix(const Matrix& otherMatrix);
-    Matrix(int rows, int columns);
+	public:
+		Matrix(std::vector<std::vector<std::complex<double>>> initMatrix);
+		Matrix(const Matrix& otherMatrix);
+		Matrix(size_t rows, size_t columns);
 
-    const std::vector<std::vector<std::complex<double>>>& get() const;
-    void set(const Matrix& otherMatrix);
-    void print() const;
+		const std::vector<std::vector<std::complex<double>>>& get() const;
+		void set(const Matrix& otherMatrix);
+		size_t rows() const;
+		size_t columns() const;
+		void print() const;
 
-    Matrix operator+(const Matrix& otherMatrix) const;
-    Matrix operator*(std::complex<double> scalar) const;
-    Matrix operator*(const Matrix& otherMatrix) const;
-    Matrix transpose() const;
-    Matrix invert() const;
+		Matrix operator+(const Matrix& otherMatrix) const;
+		Matrix operator*(std::complex<double> scalar) const;
+		Matrix operator*(const Matrix& otherMatrix) const;
+		Matrix transpose() const;
+		Matrix invert() const;
+		Matrix conjugate() const;
 
-private:
-    std::vector<std::vector<std::complex<double>>> matrix;
-    int rows, columns;
+	private:
+		std::vector<std::vector<std::complex<double>>> matrix;
+		size_t rows, columns;
 
-    void update();
-    bool sameDimensions(const Matrix& otherMatrix) const;
-    bool multiplyApplicable(const Matrix& otherMatrix) const;
-    bool isSquare() const;
-    bool isZeroColumn(int column) const;
-    void orderRows();
-    void roundValues();
+		void update();
+		void orderRows();
+		void roundValues();
 };
 
 #endif
