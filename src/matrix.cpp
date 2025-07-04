@@ -31,11 +31,11 @@ void Matrix::set(const Matrix& otherMatrix) {
 	update();
 }
 
-size_t Matrix::rows() const {
+size_t Matrix::getRows() const {
 	return rows;
 }
 
-size_t Matrix::columns() const {
+size_t Matrix::getColumns() const {
 	return columns;
 }
 
@@ -153,7 +153,7 @@ Matrix Matrix::conjugate() const {
 
 	for (size_t i = 0; i < rows; ++i) {
 		for (size_t j = 0; j < columns; ++j) {
-			resultMatrix[i][j] = std::conj(matrix[i][j]);
+			resultMatrix.matrix[i][j] = std::conj(matrix[i][j]);
 		}
 	}
 

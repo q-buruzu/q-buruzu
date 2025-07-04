@@ -12,8 +12,8 @@ class Matrix {
 
 		const std::vector<std::vector<std::complex<double>>>& get() const;
 		void set(const Matrix& otherMatrix);
-		size_t rows() const;
-		size_t columns() const;
+		size_t getRows() const;
+		size_t getColumns() const;
 		void print() const;
 
 		Matrix operator+(const Matrix& otherMatrix) const;
