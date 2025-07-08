@@ -1,21 +1,22 @@
 #ifndef HILBERT_H
 #define HILBERT_H
 
-#include <vector>
 #include <complex>
-
+#include <vector>
 
 class StateVector {
         public:
-                StateVector(std::vector<std::complex<double>> initVector);
+                StateVector(const std::vector<std::complex<double>>& initVector);
                 StateVector(const StateVector& otherVector);
-		StateVector(int elements);
+		StateVector(size_t elements);
 
-                void set(std::vector<std::complex<double>> otherVector);
-                std::vector<std::complex<double>> get();
+                void set(const std::vector<std::complex<double>>& otherVector);
+                std::vector<std::complex<double>> get() const;
 		std::complex<double>& operator[](int i);
+		const std::complex<double>& operator[](int i) const;
 		size_t size() const;
-                void print();
+		std::vector<double> convert() const;
+                void print() const;
 
         private:
                 std::vector<std::complex<double>> vector;
@@ -25,11 +26,11 @@ class HilbertSpace {
         public:
 		friend class StateVector;
 
-		StateVector add(StateVector vector1, StateVector vector2);
-		StateVector scalarMultiply(std::complex<double> scalar, StateVector vector1);
-		std::complex<double> innerProduct(StateVector vector1, StateVector vector2);
-		double norm(StateVector vector1);
-		bool isCauchyConvergent(std::vector<StateVector> vectorSequence, double epsilon);
+		StateVector add(const StateVector& vector, const StateVector& otherVector);
+		StateVector scalarMultiply(std::complex<double> scalar, const StateVector& vector);
+		std::complex<double> innerProduct(const StateVector& vector, const StateVector& otherVector);
+		double norm(const StateVector& vector);
+		bool isCauchyConvergent(const std::vector<StateVector>& vectorSequence, double epsilon);
 };
 
 #endif

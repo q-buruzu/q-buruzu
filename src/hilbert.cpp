@@ -1,14 +1,13 @@
 #include "error_utils.h"
 #include "hilbert.h"
 
-#include <vector>
-#include <iostream>
-#include <stdexcept>
-#include <complex>
 #include <cmath>
+#include <complex>
+#include <iostream>
 #include <string>
+#include <vector>
 
-StateVector::StateVector(std::vector<std::complex<double>> initVector) {
+StateVector::StateVector(const std::vector<std::complex<double>>& initVector) {
 	vector = initVector;
 }
 
@@ -16,15 +15,15 @@ StateVector::StateVector(const StateVector& otherVector) {
 	vector = otherVector.vector;
 }
 
-StateVector::StateVector(int elements) {
+StateVector::StateVector(size_t elements) {
 	vector = std::vector<std::complex<double>>(elements);
 }
 
-void StateVector::set(std::vector<std::complex<double>> otherVector) {
+void StateVector::set(const std::vector<std::complex<double>>& otherVector) {
 	vector = otherVector;
 }
 
-std::vector<std::complex<double>> StateVector::get() {
+std::vector<std::complex<double>> StateVector::get() const {
 	return vector;
 }
 
@@ -32,11 +31,25 @@ std::complex<double>& StateVector::operator[](int i) {
 	return vector[i];
 }
 
+const std::complex<double>& StateVector::operator[](int i) const {
+	return vector[i];
+}
+
 size_t StateVector::size() const {
 	return vector.size();
 }
 
-void StateVector::print() {
+std::vector<double> StateVector::convert() const {
+	std::vector<double> convertedVector(vector.size());
+
+	for (size_t i = 0; i < vector.size(); ++i) {
+		convertedVector[i] = vector[i].real();
+	}
+
+	return convertedVector;
+}
+
+void StateVector::print() const {
 	for (size_t i = 0; i < vector.size(); ++i) {
 		std::cout << vector[i] << "\t";
 	}
@@ -44,53 +57,55 @@ void StateVector::print() {
 	std::cout << "\n";
 }
 
-StateVector HilbertSpace::add(StateVector vector1, StateVector vector2) {
-	throwError(sameDimensions(vector1, vector2), "VECTORS MUST BE SAME DIMENSIONS");
+StateVector HilbertSpace::add(const StateVector& vector, const StateVector& otherVector) {
+	throwError(sameDimensions(vector, otherVector), "VECTORS MUST BE SAME DIMENSIONS");
 
-	StateVector resultVector(vector1.size());
+	StateVector resultVector(vector.size());
 
-	for (size_t i = 0; i < vector1.size(); ++i) {
-		resultVector[i] = vector1[i] + vector2[i];
+	for (size_t i = 0; i < vector.size(); ++i) {
+		resultVector[i] = vector[i] + otherVector[i];
 	}
 
 	return resultVector;
 }
 
-StateVector HilbertSpace::scalarMultiply(std::complex<double> scalar, StateVector vector1) {
-	StateVector resultVector(vector1.size());
+StateVector HilbertSpace::scalarMultiply(std::complex<double> scalar, const StateVector& vector) {
+	StateVector resultVector(vector.size());
 
-	for (size_t i = 0; i < vector1.size(); ++i) {
-		resultVector[i] = scalar * vector1[i];
+	for (size_t i = 0; i < vector.size(); ++i) {
+		resultVector[i] = scalar * vector[i];
 	}
 
 	return resultVector;
 }
 
-std::complex<double> HilbertSpace::innerProduct(StateVector vector1, StateVector vector2) {
-	throwError(sameDimensions(vector1, vector2), "VECTORS MUST BE SAME DIMENSIONS");
+std::complex<double> HilbertSpace::innerProduct(const StateVector& vector, const StateVector& otherVector) {
+	throwError(sameDimensions(vector, otherVector), "VECTORS MUST BE SAME DIMENSIONS");
 
 	std::complex<double> innerProductValue = {0, 0};
 
-	for (size_t i = 0; i < vector1.size(); ++i) {
-		innerProductValue += std::conj(vector1[i]) * vector2[i];
+	for (size_t i = 0; i < vector.size(); ++i) {
+		innerProductValue += std::conj(vector[i]) * otherVector[i];
 	}
 
 	return innerProductValue;
 }
 
-double HilbertSpace::norm(StateVector vector1) {
-	return std::sqrt(std::real(innerProduct(vector1, vector1)));
+double HilbertSpace::norm(const StateVector& vector) {
+	return std::sqrt(std::real(innerProduct(vector, vector)));
 }
 
-bool HilbertSpace::isCauchyConvergent(std::vector<StateVector> vectorSequence, double epsilon = 1e-12) {
-	for (size_t i = 0; i < vectorSequence.size(); ++i) {
-		for (size_t j = i + 1; j < vectorSequence.size(); ++j) {
-			StateVector difference(vectorSequence[i].size());
+bool HilbertSpace::isCauchyConvergent(const std::vector<StateVector>& sequence, double epsilon = 1e-12) {
+	for (size_t i = 0; i < sequence.size(); ++i) {
+		for (size_t j = i + 1; j < sequence.size(); ++j) {
+			StateVector difference(sequence[i].size());
 
 			for (size_t k = 0; k < difference.size(); ++k) {
-				difference[k] = vectorSequence[i][k] - vectorSequence[j][k];
+				difference[k] = sequence[i][k] - sequence[j][k];
+			}
 
-				if (HilbertSpace::norm(difference) > epsilon) return false;
+			if (HilbertSpace::norm(difference) > epsilon) {
+				return false;
 			}
 		}
 	}

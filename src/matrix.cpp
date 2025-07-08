@@ -1,5 +1,5 @@
-#include "matrix.h"
 #include "error_utils.h"
+#include "matrix.h"
 
 #include <cmath>
 #include <complex>
