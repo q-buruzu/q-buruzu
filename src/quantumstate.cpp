@@ -1,92 +1,96 @@
 #include "error_utils.h"
 #include "hilbert.h"
 #include "matrix.h"
+#include "quantumstate.h"
 
-#include <bitset>
 #include <cmath>
 #include <complex>
+#include <iostream>
 #include <random>
 #include <string>
 #include <vector>
 
-size_t qubits = 1;
+QuantumState::QuantumState(size_t qubits)
+	: state((size_t) pow(2, qubits)) {
+		dimension = pow(2, qubits);
+		set(randGauss(0.0, 1.0));
+}
 
-class QuantumState {
-	public:
-		QuantumState(size_t qubits) {
-			dimension = pow(2, qubits);
-			set(randGauss());
-		}
+void QuantumState::set(StateVector otherState) {
+	state.set(otherState.get());
+}
 
-		void set(StateVector otherState) {
-			state.set(otherState.get());
-		}
+void QuantumState::set(std::vector<std::complex<double>> otherState) {
+	state.set(otherState);
+}
 
-		void set(std::vector<std::complex<double>> otherState) {
-			state.set(otherState);
-		}
+std::vector<std::complex<double>> QuantumState::randGauss(double mean, double stddev) {
+	std::random_device rd;
+	std::mt19937 gen(rd());
 
-		std::vector<std::complex<double>> randGauss(double mean = 0, double stddev = 1) {
-			std::random_device rd;
-			std::mt19937 gen(rd());
+	std::normal_distribution<double> distribution(mean, stddev);
 
-			std::normal_distribution<double> distribution(mean, stddev);
+	std::vector<std::complex<double>> randomVector(dimension);
 
-			std::vector<std::complex<double>> randomVector(dimension);
+	for (size_t i = 0; i < dimension; ++i) {
+		randomVector[i] = {distribution(gen), distribution(gen)};
+	}
 
-			for (size_t i = 0; i < dimension; ++i) {
-				randomVector[i] = {distribution(gen), distribution(gen)};
-			}
+	return randomVector;
+}
 
-			return randomVector;
-		}
+int QuantumState::randChoose() {
+	std::random_device rd;
+	std::mt19937 gen(rd());
 
-		int randChoose() {
-			std::random_device rd;
-			std::mt19937 gen(rd());
+	std::vector<double> probabilities = state.convert();
 
-			std::discrete_distribution<> distribution(state.convert());
+	std::discrete_distribution<> distribution(probabilities.begin(), probabilities.end());
 
-			return distribution(gen);
-		}
+	return distribution(gen);
+}
 
-		void normalize() {
-			std::vector<std::complex<double>> normalizedState(dimension);
+void QuantumState::normalize() {
+	std::vector<std::complex<double>> normalizedState(dimension);
 
-			double factor = 1 / space.norm(state);
+	double factor = 1 / space.norm(state);
 
-			for (size_t i = 0; i < dimension; ++i) {
-				normalizedState[i] = state[i] * factor;
-			}
+	for (size_t i = 0; i < dimension; ++i) {
+		normalizedState[i] = state[i] * factor;
+	}
 
-			state.set(normalizedState);
-		}
+	state.set(normalizedState);
+}
 
-		void probAmplitudes() {
-			normalize();
+std::string QuantumState::printKet(int value, size_t length) {
+	std::string ket = "|";
 
-			for (size_t i = 0; i < dimension; ++i) {
-				state[i] *= std::conj(state[i]);
-			}
-		}
+	for (size_t i = static_cast<size_t>(length) - 1; i >= 0; --i) {
+		ket += ((value >> i) & 1) ? '1' : '0';
+	}
 
-		void measure() {
-			probAmplitudes();
+	return ket + ">";
+}
 
-			int decimalValue = randChoose()
-			std::string binaryValue = std::bitset<(int)std::log2(dimension)>(decimalValue).to_string();
+void QuantumState::probAmplitudes() {
+	normalize();
 
-			std::cout << binaryValue << "\n";
+	for (size_t i = 0; i < dimension; ++i) {
+		state[i] *= std::conj(state[i]);
+	}
+}
 
-			for (size_t i = 0; i < dimension; ++i) {
-				state[i] = {0, 0};
-			}
+void QuantumState::measure() {
+	probAmplitudes();
 
-			state[decimalValue] = {1, 0};
-		}
+	int decimalValue = randChoose();
 
-	private:
-		HilbertSpace space;
-		StateVector state;
-		size_t dimension;
-};
+	std::string binaryValue = printKet(decimalValue, std::log2(dimension));
+	std::cout << binaryValue << "\n";
+
+	for (size_t i = 0; i < dimension; ++i) {
+		state[i] = {0, 0};
+	}
+
+	state[decimalValue] = {1, 0};
+}
