@@ -1,15 +1,14 @@
-#include "matrix.h"
-#include "hilbert.h"
+#include "quantumstate.h"
+
+#include <iostream>
 
 int main() {
-	HilbertSpace space;
+	size_t qubits;
+	std::cout << "enter number of qubits blud\n";
+	std::cin >> qubits;
+	std::cout << "\n";
 
-	Matrix A({{{0, 0}, {0, 1}}, {{1, 0}, {1, 1}}});
-	A = A * std::complex<double>{1, 2};
-	A.print();
-
-	StateVector b({{0, 1}, {0, 0}, {1, 0}, {8, 8}});
-	b = space.scalarMultiply({0.25, 0.25}, b);
-	b.print();
+	QuantumState blud(qubits);
+	blud.measure();
 	return 0;
 }

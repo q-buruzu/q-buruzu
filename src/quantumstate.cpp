@@ -65,8 +65,8 @@ void QuantumState::normalize() {
 std::string QuantumState::printKet(int value, size_t length) {
 	std::string ket = "|";
 
-	for (size_t i = static_cast<size_t>(length) - 1; i >= 0; --i) {
-		ket += ((value >> i) & 1) ? '1' : '0';
+	for (size_t i = 0; i < length; ++i) {
+		ket += ((value >> (length - i - 1)) & 1) ? '1' : '0';
 	}
 
 	return ket + ">";
@@ -82,7 +82,6 @@ void QuantumState::probAmplitudes() {
 
 void QuantumState::measure() {
 	probAmplitudes();
-
 	int decimalValue = randChoose();
 
 	std::string binaryValue = printKet(decimalValue, std::log2(dimension));
