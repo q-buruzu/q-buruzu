@@ -24,7 +24,7 @@ void QuantumState::set(std::vector<std::complex<double>> otherState) {
 	state.set(otherState);
 }
 
-std::vector<std::complex<double>> QuantumState::randGauss(double mean, double stddev) {
+std::vector<std::complex<double>> QuantumState::randGauss(double mean, double stddev) const {
 	std::random_device rd;
 	std::mt19937 gen(rd());
 
@@ -39,7 +39,7 @@ std::vector<std::complex<double>> QuantumState::randGauss(double mean, double st
 	return randomVector;
 }
 
-int QuantumState::randChoose() {
+int QuantumState::randChoose() const {
 	std::random_device rd;
 	std::mt19937 gen(rd());
 
@@ -62,7 +62,7 @@ void QuantumState::normalize() {
 	state.set(normalizedState);
 }
 
-std::string QuantumState::printKet(int value, size_t length) {
+std::string QuantumState::printKet(int value, size_t length) const {
 	std::string ket = "|";
 
 	for (size_t i = 0; i < length; ++i) {
@@ -84,7 +84,7 @@ void QuantumState::measure() {
 	probAmplitudes();
 	int decimalValue = randChoose();
 
-	std::string binaryValue = printKet(decimalValue, std::log2(dimension));
+	std::string binaryValue = printKet(decimalValue, static_cast<size_t>(std::log2(dimension)));
 	std::cout << binaryValue << "\n";
 
 	for (size_t i = 0; i < dimension; ++i) {
