@@ -11,6 +11,7 @@
 class QuantumState {
 	public:
 		QuantumState(size_t qubits);
+		StateVector get() const;
 		void set(StateVector otherState);
 		void set(std::vector<std::complex<double>> otherState);
 		std::vector<std::complex<double>> randGauss(double mean, double stddev) const;

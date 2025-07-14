@@ -16,6 +16,10 @@ QuantumState::QuantumState(size_t qubits)
 		set(randGauss(0.0, 1.0));
 }
 
+StateVector QuantumState::get() const {
+	return state;
+}
+
 void QuantumState::set(StateVector otherState) {
 	state.set(otherState.get());
 }

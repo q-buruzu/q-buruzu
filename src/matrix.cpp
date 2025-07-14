@@ -1,4 +1,5 @@
 #include "error_utils.h"
+#include "hilbert.h"
 #include "matrix.h"
 
 #include <cmath>
@@ -90,6 +91,18 @@ Matrix Matrix::operator*(const Matrix& otherMatrix) const {
 	resultMatrix.roundValues();
 
 	return resultMatrix;
+}
+
+StateVector Matrix::operator*(const StateVector& vector) const {
+	StateVector resultVector(rows);
+
+	for (size_t i = 0; i < rows; ++i) {
+		for (size_t j = 0; j < columns; ++j) {
+			resultVector[i] += matrix[i][j] * vector[j];
+		}
+	}
+
+	return resultVector;
 }
 
 Matrix Matrix::transpose() const {

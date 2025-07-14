@@ -1,6 +1,8 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#include "hilbert.h"
+
 #include <complex>
 #include <vector>
 
@@ -19,6 +21,7 @@ class Matrix {
 		Matrix operator+(const Matrix& otherMatrix) const;
 		Matrix operator*(std::complex<double> scalar) const;
 		Matrix operator*(const Matrix& otherMatrix) const;
+		StateVector operator*(const StateVector& vector) const;
 		Matrix transpose() const;
 		Matrix invert() const;
 		Matrix conjugate() const;
