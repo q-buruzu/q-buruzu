@@ -1,14 +1,9 @@
-#include "quantumstate.h"
-
-#include <iostream>
+#include "main_utils.h"
 
 int main() {
-	size_t qubits;
-	std::cout << "enter number of qubits blud\n";
-	std::cin >> qubits;
-	std::cout << "\n";
+	initialize();
+	mainLoop();
+	measure();
 
-	QuantumState blud(qubits);
-	blud.measure();
 	return 0;
 }

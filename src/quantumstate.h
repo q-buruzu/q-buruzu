@@ -1,7 +1,6 @@
 #ifndef QUANTUMSTATE_H
 #define QUANTUMSTATE_H
 
-#include "error_utils.h"
 #include "hilbert.h"
 #include "matrix.h"
 

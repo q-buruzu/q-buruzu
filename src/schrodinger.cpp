@@ -1,5 +1,5 @@
-#include "quantumstate.h"
 #include "matrix.h"
+#include "quantumstate.h"
 #include "schrodinger.h"
 
 #include <complex>
