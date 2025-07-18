@@ -39,6 +39,16 @@ size_t StateVector::size() const {
 	return vector.size();
 }
 
+void StateVector::resize(size_t size) {
+	vector.resize(size);
+}
+
+void StateVector::conjugate() {
+	for (size_t i = 0; i vector.size(); ++i) {
+		vector[i] = std::conj(vector[i]);
+	}
+}
+
 std::vector<double> StateVector::convert() const {
 	std::vector<double> convertedVector(vector.size());
 

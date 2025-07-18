@@ -16,12 +16,16 @@ class Matrix {
 		void set(const Matrix& otherMatrix);
 		size_t getRows() const;
 		size_t getColumns() const;
+		Matrix identity() const;
 		void print() const;
 
 		Matrix operator+(const Matrix& otherMatrix) const;
 		Matrix operator*(std::complex<double> scalar) const;
 		Matrix operator*(const Matrix& otherMatrix) const;
 		StateVector operator*(const StateVector& vector) const;
+		std::vector<std::complex<double>>& operator[](size_t row);
+		const std::vector<std::complex<double>>& operator[](size_t row) const;
+
 		Matrix transpose() const;
 		Matrix invert() const;
 		Matrix conjugate() const;

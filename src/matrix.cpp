@@ -105,6 +105,14 @@ StateVector Matrix::operator*(const StateVector& vector) const {
 	return resultVector;
 }
 
+std::vector<std::complex<double>>& Matrix::operator[](size_t row) {
+	return matrix.at(rows);
+}
+
+const std::vector<std::complex<double>>& Matrix::operator[](size_t row) const {
+	return matrix.at(rows);
+}
+
 Matrix Matrix::transpose() const {
 	Matrix resultMatrix(columns, rows);
 
@@ -171,6 +179,20 @@ Matrix Matrix::conjugate() const {
 	}
 
 	return resultMatrix;
+}
+
+Matrix identity() const {
+	Matrix identity(rows, columns);
+
+	for (size_t i = 0; i < rows; ++i) {
+		for (size_t j = 0; j < columns; ++j) {
+			identity.matrix[i][j] = {0, 0};
+		}
+
+		identity.matrix[i][i] = {1, 0};
+	}
+
+	return identity;
 }
 
 void Matrix::print() const {
