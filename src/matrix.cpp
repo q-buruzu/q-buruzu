@@ -33,7 +33,9 @@ void Matrix::set(const Matrix& otherMatrix) {
 }
 
 void Matrix::resize(size_t rows, size_t columns) {
-	matrix.resize(rows, std::vector<std::complex<double>>(columns, {0, 0}));
+	matrix.resize(rows);
+	for (auto &row : matrix)
+		row.resize(columns, {0, 0});
 	update();
 }
 
@@ -111,11 +113,11 @@ StateVector Matrix::operator*(const StateVector& vector) const {
 }
 
 std::vector<std::complex<double>>& Matrix::operator[](size_t row) {
-	return matrix.at(rows);
+	return matrix.at(row);
 }
 
 const std::vector<std::complex<double>>& Matrix::operator[](size_t row) const {
-	return matrix.at(rows);
+	return matrix.at(row);
 }
 
 Matrix Matrix::transpose() const {

@@ -71,19 +71,15 @@ Matrix outerProduct(StateVector state) {
 }
 
 Matrix identityPad(Matrix A, size_t size) {
-	std::cout << "ok1\n";
 	if (A.getRows() == size) {
 		return A;
 	}
 
 	Matrix B(size, size);
 	B = B.identity();
-	std::cout << "ok2\n";
 
 	for (size_t i = 0; i < A.getRows(); ++i) {
-		std::cout << "ok3\n";
 		for (size_t j = 0; j < A.getColumns(); ++j) {
-			std::cout << "ok4\n";
 			B[i + (size - A.getRows())][j + (size - A.getColumns())] = A[i][j];
 		}
 	}
@@ -99,18 +95,17 @@ std::vector<Matrix> qrDecompose(Matrix A) {
 	Q = Q.identity();
 
 	for (size_t i = 0; i < A.getRows() - 1; ++i) {
-		std::cout << "I WAS AN EPSTEIN AFFILIATE";
 		k = A.getRows() - i;
 		state.resize(k);
 		H.resize(k, k);
 
 		for (size_t j = 0; j < k; ++j) {
-			// state[j] = A[j + i][i];
+			state[j] = A[j + i][i];
 		}
 
 		state[0] += (state[0] / std::abs(state[0])) * tempNorm(state);
 
-		// H = H.identity() + ((outerProduct(state) * cd{-2, 0}) * (cd{1, 0} / tempInnerProduct(state)));
+		H = H.identity() + ((outerProduct(state) * cd{-2, 0}) * (cd{1, 0} / tempInnerProduct(state)));
 
 		H = identityPad(H, A.getRows());
 
