@@ -14,6 +14,7 @@ class Matrix {
 
 		const std::vector<std::vector<std::complex<double>>>& get() const;
 		void set(const Matrix& otherMatrix);
+		void resize(size_t rows, size_t columns);
 		size_t getRows() const;
 		size_t getColumns() const;
 		Matrix identity() const;

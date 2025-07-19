@@ -11,15 +11,15 @@ typedef std::complex<double> cd;
 double hBar = 1.054571817e-34;
 Matrix I({{cd{1, 0}, cd{0, 0}}, {cd{0, 0}, cd{1, 0}}});
 
-Matrix resize(StateVector state) {
+Matrix split(StateVector state) {
 	std::vector<std::complex<double>> vector = state.get();
 	Matrix resultMatrix(2, 0.5 * vector.size());
 
-	for (int i = 0; i < 0.5 * vector.size(); ++i) {
+	for (size_t i = 0; i < 0.5 * vector.size(); ++i) {
 		resultMatrix[0][i] = vector[i];
 	}
 
-	for (int i = 0.5 * vector.size(); i < vector.size(); ++i) {
+	for (size_t i = 0.5 * vector.size(); i < vector.size(); ++i) {
 		resultMatrix[1][i] = vector[i];
 	}
 
@@ -32,7 +32,7 @@ void tempNormalize(StateVector vector) {
         double factor = 1 / space.norm(vector);
 
         for (size_t i = 0; i < vector.get().size(); ++i) {
-                vector[i] *= {factor, 0};
+                vector[i] = vector[i] * cd{factor, 0};
         }
 }
 
@@ -42,38 +42,93 @@ double tempNorm(StateVector vector) {
 	return space.norm(vector);
 }
 
-void qrDecompose(Matrix A) {
-	int index;
-	StateVector state({{0, 0}});
-	double norm;
+std::complex<double> tempInnerProduct(StateVector vector) {
+        std::complex<double> innerProductValue = {0, 0};
 
-	for (int i = 0; i < A.getColumns; ++i) {
-		index = A.getRows - i;
-		state.resize(index);
+        for (size_t i = 0; i < vector.size(); ++i) {
+                innerProductValue += std::conj(vector[i]) * vector[i];
+        }
 
-		for (int j = 0; j < index; ++j) {
-			state[i] = A[j][i];
-		}
-
-		norm = tempNorm(state);
-
-		state[0] += (state[0] / std::abs(state[0])) * norm;
-
-		tempNormalize(state);
-
-		
-	}
+        return innerProductValue;
 }
 
+Matrix outerProduct(StateVector state) {
+        StateVector conjugateVector(state.size());
 
-Matrix SVD(StateVector state) {
-        Matrix A(resize(state));
+        for (size_t i = 0; i < state.size(); ++i) {
+                conjugateVector[i] = std::conj(state[i]);
+        }
+
+        Matrix outerProduct(state.size(), state.size());
+
+        for (size_t i = 0; i < state.size(); ++i) {
+                for (size_t j = 0; j < state.size(); ++j) {
+                        outerProduct[i][j] = state[i] * conjugateVector[j];
+                }
+        }
+
+        return outerProduct;
+}
+
+Matrix identityPad(Matrix A, size_t size) {
+	std::cout << "ok1\n";
+	if (A.getRows() == size) {
+		return A;
+	}
+
+	Matrix B(size, size);
+	B = B.identity();
+	std::cout << "ok2\n";
+
+	for (size_t i = 0; i < A.getRows(); ++i) {
+		std::cout << "ok3\n";
+		for (size_t j = 0; j < A.getColumns(); ++j) {
+			std::cout << "ok4\n";
+			B[i + (size - A.getRows())][j + (size - A.getColumns())] = A[i][j];
+		}
+	}
+
+	return B;
+}
+
+std::vector<Matrix> qrDecompose(Matrix A) {
+	size_t k;
+	StateVector state({cd{0, 0}});
+	Matrix H({{cd{0, 0}}});
+	Matrix Q(A.getRows(), A.getRows());
+	Q = Q.identity();
+
+	for (size_t i = 0; i < A.getRows() - 1; ++i) {
+		std::cout << "I WAS AN EPSTEIN AFFILIATE";
+		k = A.getRows() - i;
+		state.resize(k);
+		H.resize(k, k);
+
+		for (size_t j = 0; j < k; ++j) {
+			// state[j] = A[j + i][i];
+		}
+
+		state[0] += (state[0] / std::abs(state[0])) * tempNorm(state);
+
+		// H = H.identity() + ((outerProduct(state) * cd{-2, 0}) * (cd{1, 0} / tempInnerProduct(state)));
+
+		H = identityPad(H, A.getRows());
+
+		A = H * A;
+		Q = Q * H;
+	}
+
+	return std::vector<Matrix>{Q, A};
+}
+
+void SVD(StateVector state) {
+        Matrix A(split(state));
         Matrix B(A * A.conjugate().transpose());
 
         std::complex<double> B_trace = B[0][0] + B[1][1];
         std::complex<double> B_determinant = B[0][0] * B[1][1] - B[0][1] * std::conj(B[0][1]);
-        std::complex<double> eigenvalue1 = (B_trace + std::sqrt(pow(B_trace, 2) - 4 * B_determinant)) / 2;
-        std::complex<double> eigenvalue2 = (B_trace - std::sqrt(pow(B_trace, 2) - 4 * B_determinant)) / 2;
+        std::complex<double> eigenvalue1 = (B_trace + std::sqrt(pow(B_trace, 2) - cd{4, 0} * B_determinant)) / cd{2, 0};
+        std::complex<double> eigenvalue2 = (B_trace - std::sqrt(pow(B_trace, 2) - cd{4, 0} * B_determinant)) / cd{2, 0};
 
         StateVector eigenvector1(2);
         StateVector eigenvector2(2);
@@ -82,21 +137,21 @@ Matrix SVD(StateVector state) {
                 eigenvector1[0] = B[0][1];
                 eigenvector1[1] = eigenvalue1 - B[0][0];
 
-                normalize(eigenvector1);
+                tempNormalize(eigenvector1);
 
-                eigenvector2[0] = {-1, 0} * std::conj(eigenvalue1 - B[0][0]);
+                eigenvector2[0] = cd{-1, 0} * std::conj(eigenvalue1 - B[0][0]);
                 eigenvector2[1] = std::conj(B[0][1]);
         } else {
                 eigenvector1[0] = eigenvalue1 - B[1][1];
-                eigenvector1[1] = std::conj(B.matrix[0][1]);
+                eigenvector1[1] = std::conj(B[0][1]);
 
-		normalize(eigenvector1);
+		tempNormalize(eigenvector1);
 
-		eigenvector2[0] = {-1, 0} * std::conj(B[0][1]);
+		eigenvector2[0] = cd{-1, 0} * std::conj(B[0][1]);
                 eigenvector2[1] = std::conj(eigenvalue1 - B[1][1]);
         }
 
-        std::vector<std::vector<std::complex<double>>> U(2, 2);
+        std::vector<std::vector<std::complex<double>>> U(2, std::vector<std::complex<double>>(2, cd{0, 0}));
 
  	U[0][0] = eigenvector1.get()[0];
         U[0][1] = eigenvector2.get()[0];
@@ -119,7 +174,7 @@ Matrix SVD(StateVector state) {
 
         Matrix C(A.conjugate().transpose() * A);
 
-        Matrix V();
+        // Matrix V();
 }
 
 Matrix findEvolution(double step) {
@@ -135,3 +190,4 @@ Matrix findEvolution(double step) {
 void evolve(QuantumState state, Matrix evolution) {
 	state.set(evolution * state.get());
 }
+

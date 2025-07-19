@@ -44,7 +44,7 @@ void StateVector::resize(size_t size) {
 }
 
 void StateVector::conjugate() {
-	for (size_t i = 0; i vector.size(); ++i) {
+	for (size_t i = 0; i < vector.size(); ++i) {
 		vector[i] = std::conj(vector[i]);
 	}
 }

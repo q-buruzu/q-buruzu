@@ -32,6 +32,11 @@ void Matrix::set(const Matrix& otherMatrix) {
 	update();
 }
 
+void Matrix::resize(size_t rows, size_t columns) {
+	matrix.resize(rows, std::vector<std::complex<double>>(columns, {0, 0}));
+	update();
+}
+
 size_t Matrix::getRows() const {
 	return rows;
 }
@@ -181,18 +186,18 @@ Matrix Matrix::conjugate() const {
 	return resultMatrix;
 }
 
-Matrix identity() const {
-	Matrix identity(rows, columns);
+Matrix Matrix::identity() const {
+	Matrix resultMatrix(rows, columns);
 
 	for (size_t i = 0; i < rows; ++i) {
 		for (size_t j = 0; j < columns; ++j) {
-			identity.matrix[i][j] = {0, 0};
+			resultMatrix.matrix[i][j] = {0, 0};
 		}
 
-		identity.matrix[i][i] = {1, 0};
+		resultMatrix.matrix[i][i] = {1, 0};
 	}
 
-	return identity;
+	return resultMatrix;
 }
 
 void Matrix::print() const {

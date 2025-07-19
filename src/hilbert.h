@@ -15,7 +15,7 @@ class StateVector {
 		std::complex<double>& operator[](int i);
 		const std::complex<double>& operator[](int i) const;
 		size_t size() const;
-		void resize();
+		void resize(size_t size);
 		void conjugate();
 		std::vector<double> convert() const;
                 void print() const;
