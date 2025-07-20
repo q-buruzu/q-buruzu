@@ -1,3 +1,4 @@
+#include "hilbert.h"
 #include "matrix.h"
 #include "quantumstate.h"
 #include "schrodinger.h"
@@ -9,7 +10,6 @@
 typedef std::complex<double> cd;
 
 double hBar = 1.054571817e-34;
-Matrix I({{cd{1, 0}, cd{0, 0}}, {cd{0, 0}, cd{1, 0}}});
 
 Matrix split(StateVector state) {
 	std::vector<std::complex<double>> vector = state.get();
@@ -24,32 +24,6 @@ Matrix split(StateVector state) {
 	}
 
 	return resultMatrix;
-}
-
-void tempNormalize(StateVector vector) {
-	HilbertSpace space;
-
-        double factor = 1 / space.norm(vector);
-
-        for (size_t i = 0; i < vector.get().size(); ++i) {
-                vector[i] = vector[i] * cd{factor, 0};
-        }
-}
-
-double tempNorm(StateVector vector) {
-	HilbertSpace space;
-
-	return space.norm(vector);
-}
-
-std::complex<double> tempInnerProduct(StateVector vector) {
-        std::complex<double> innerProductValue = {0, 0};
-
-        for (size_t i = 0; i < vector.size(); ++i) {
-                innerProductValue += std::conj(vector[i]) * vector[i];
-        }
-
-        return innerProductValue;
 }
 
 Matrix outerProduct(StateVector state) {
@@ -90,6 +64,8 @@ Matrix identityPad(Matrix A, size_t size) {
 std::vector<Matrix> qrDecompose(Matrix A) {
 	size_t k;
 	StateVector state({cd{0, 0}});
+	HilbertSpace space;
+
 	Matrix H({{cd{0, 0}}});
 	Matrix Q(A.getRows(), A.getRows());
 	Q = Q.identity();
@@ -103,15 +79,18 @@ std::vector<Matrix> qrDecompose(Matrix A) {
 			state[j] = A[j + i][i];
 		}
 
-		state[0] += (state[0] / std::abs(state[0])) * tempNorm(state);
+		state[0] += (state[0] / std::abs(state[0])) * space.norm(state);
 
-		H = H.identity() + ((outerProduct(state) * cd{-2, 0}) * (cd{1, 0} / tempInnerProduct(state)));
+		H = H.identity() + ((outerProduct(state) * cd{-2, 0}) * (cd{1, 0} / space.innerProduct(state, state)));
 
 		H = identityPad(H, A.getRows());
 
 		A = H * A;
 		Q = Q * H;
 	}
+
+	Q.roundValues();
+	A.roundValues();
 
 	return std::vector<Matrix>{Q, A};
 }
@@ -127,12 +106,13 @@ void SVD(StateVector state) {
 
         StateVector eigenvector1(2);
         StateVector eigenvector2(2);
+	HilbertSpace space;
 
         if (std::abs(B[0][1]) > std::abs(eigenvalue1 - B[0][0])) {
                 eigenvector1[0] = B[0][1];
                 eigenvector1[1] = eigenvalue1 - B[0][0];
 
-                tempNormalize(eigenvector1);
+                space.normalize(eigenvector1);
 
                 eigenvector2[0] = cd{-1, 0} * std::conj(eigenvalue1 - B[0][0]);
                 eigenvector2[1] = std::conj(B[0][1]);
@@ -140,7 +120,7 @@ void SVD(StateVector state) {
                 eigenvector1[0] = eigenvalue1 - B[1][1];
                 eigenvector1[1] = std::conj(B[0][1]);
 
-		tempNormalize(eigenvector1);
+		space.normalize(eigenvector1);
 
 		eigenvector2[0] = cd{-1, 0} * std::conj(B[0][1]);
                 eigenvector2[1] = std::conj(eigenvalue1 - B[1][1]);
@@ -177,7 +157,7 @@ Matrix findEvolution(double step) {
 
 	O = (((O * cd{step, 0}) * cd{0, 1}) * cd{1 / hBar, 0}) * cd{-1, 0};
 
-	O = I + O;
+	O = O.identity() + O;
 
 	return O;
 }

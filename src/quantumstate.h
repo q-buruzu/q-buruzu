@@ -15,7 +15,6 @@ class QuantumState {
 		void set(std::vector<std::complex<double>> otherState);
 		std::vector<std::complex<double>> randGauss(double mean, double stddev) const;
 		int randChoose() const;
-		void normalize();
 		std::string printKet(int value, size_t length) const;
 		void probAmplitudes();
 		void measure();

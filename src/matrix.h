@@ -18,6 +18,7 @@ class Matrix {
 		size_t getRows() const;
 		size_t getColumns() const;
 		Matrix identity() const;
+		void roundValues();
 		void print() const;
 
 		Matrix operator+(const Matrix& otherMatrix) const;
@@ -37,7 +38,6 @@ class Matrix {
 
 		void update();
 		void orderRows();
-		void roundValues();
 };
 
 #endif

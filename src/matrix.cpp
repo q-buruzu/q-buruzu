@@ -8,18 +8,21 @@
 #include <string>
 #include <vector>
 
-Matrix::Matrix(std::vector<std::vector<std::complex<double>>> initMatrix) {
-	matrix = initMatrix;
+Matrix::Matrix(std::vector<std::vector<std::complex<double>>> otherMatrix) {
+	matrix = otherMatrix;
+
 	update();
 }
 
 Matrix::Matrix(const Matrix& otherMatrix) {
 	matrix = otherMatrix.matrix;
+
 	update();
 }
 
 Matrix::Matrix(size_t rows, size_t columns) {
 	matrix.resize(rows, std::vector<std::complex<double>>(columns, {0, 0}));
+
 	update();
 }
 
@@ -29,13 +32,17 @@ const std::vector<std::vector<std::complex<double>>>& Matrix::get() const {
 
 void Matrix::set(const Matrix& otherMatrix) {
 	matrix = otherMatrix.matrix;
+
 	update();
 }
 
 void Matrix::resize(size_t rows, size_t columns) {
 	matrix.resize(rows);
-	for (auto &row : matrix)
-		row.resize(columns, {0, 0});
+
+	for (size_t i = 0; i < matrix[0].size(); ++i) {
+		matrix[i].resize(columns, {0, 0});
+	}
+
 	update();
 }
 
@@ -63,8 +70,6 @@ Matrix Matrix::operator+(const Matrix& otherMatrix) const {
 		}
 	}
 
-	resultMatrix.roundValues();
-
 	return resultMatrix;
 }
 
@@ -76,8 +81,6 @@ Matrix Matrix::operator*(std::complex<double> scalar) const {
 			resultMatrix.matrix[i][j] = scalar * matrix[i][j];
 		}
 	}
-
-	resultMatrix.roundValues();
 
 	return resultMatrix;
 }
@@ -94,8 +97,6 @@ Matrix Matrix::operator*(const Matrix& otherMatrix) const {
 			}
 		}
 	}
-
-	resultMatrix.roundValues();
 
 	return resultMatrix;
 }
@@ -202,18 +203,6 @@ Matrix Matrix::identity() const {
 	return resultMatrix;
 }
 
-void Matrix::print() const {
-	for (size_t i = 0; i < rows; ++i) {
-        	for (size_t j = 0; j < columns; ++j) {
-			std::cout << matrix[i][j] << "\t";
-		}
-
-		std::cout << "\n";
-	}
-
-	std::cout << "\n";
-}
-
 void Matrix::roundValues() {
 	double power = 1e8;
 
@@ -225,6 +214,18 @@ void Matrix::roundValues() {
 			matrix[i][j] = {real, imag};
 		}
 	}
+}
+
+void Matrix::print() const {
+	for (size_t i = 0; i < rows; ++i) {
+        	for (size_t j = 0; j < columns; ++j) {
+			std::cout << matrix[i][j] << "\t";
+		}
+
+		std::cout << "\n";
+	}
+
+	std::cout << "\n";
 }
 
 void Matrix::orderRows() {

@@ -54,18 +54,6 @@ int QuantumState::randChoose() const {
 	return distribution(gen);
 }
 
-void QuantumState::normalize() {
-	std::vector<std::complex<double>> normalizedState(dimension);
-
-	double factor = 1 / space.norm(state);
-
-	for (size_t i = 0; i < dimension; ++i) {
-		normalizedState[i] = state[i] * factor;
-	}
-
-	state.set(normalizedState);
-}
-
 std::string QuantumState::printKet(int value, size_t length) const {
 	std::string ket = "|";
 
@@ -77,7 +65,7 @@ std::string QuantumState::printKet(int value, size_t length) const {
 }
 
 void QuantumState::probAmplitudes() {
-	normalize();
+	space.normalize(state);
 
 	for (size_t i = 0; i < dimension; ++i) {
 		state[i] *= std::conj(state[i]);
