@@ -26,22 +26,16 @@ Matrix split(StateVector state) {
 	return resultMatrix;
 }
 
-Matrix outerProduct(StateVector state) {
-        StateVector conjugateVector(state.size());
+Matrix outerProduct(StateVector vector) {
+        Matrix resultMatrix(vector.size(), vector.size());
 
-        for (size_t i = 0; i < state.size(); ++i) {
-                conjugateVector[i] = std::conj(state[i]);
-        }
-
-        Matrix outerProduct(state.size(), state.size());
-
-        for (size_t i = 0; i < state.size(); ++i) {
-                for (size_t j = 0; j < state.size(); ++j) {
-                        outerProduct[i][j] = state[i] * conjugateVector[j];
+        for (size_t i = 0; i < vector.size(); ++i) {
+                for (size_t j = 0; j < vector.size(); ++j) {
+                        resultMatrix[i][j] = vector[i] * std::conj(vector[j]);
                 }
         }
 
-        return outerProduct;
+        return resultMatrix;
 }
 
 Matrix identityPad(Matrix A, size_t size) {
