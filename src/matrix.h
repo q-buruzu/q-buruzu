@@ -40,4 +40,6 @@ class Matrix {
 		void orderRows();
 };
 
+Matrix kroneckerProduct(Matrix matrix1, Matrix matrix2);
+
 #endif

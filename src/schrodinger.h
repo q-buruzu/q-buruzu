@@ -7,19 +7,19 @@
 
 Matrix split(StateVector state);
 
-void tempNormalize(StateVector vector);
-
-double tempNorm(StateVector vector);
-
-std::complex<double> tempInnerProduct(StateVector vector);
-
 Matrix outerProduct(StateVector state);
 
 Matrix identityPad(Matrix A, size_t size);
 
 std::vector<Matrix> qrDecompose(Matrix A);
 
-void SVD(StateVector state);
+bool offDiagonalValues(Matrix A, std::complex<double> tolerance);
+
+Matrix algorithmQR(Matrix A);
+
+std::vector<Matrix> algorithmSVD(StateVector state);
+
+std::vector<StateVector> extractQubitStates(StateVector state);
 
 Matrix findEvolution(double step);
 

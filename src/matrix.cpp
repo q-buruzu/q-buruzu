@@ -39,7 +39,7 @@ void Matrix::set(const Matrix& otherMatrix) {
 void Matrix::resize(size_t rows, size_t columns) {
 	matrix.resize(rows);
 
-	for (size_t i = 0; i < matrix[0].size(); ++i) {
+	for (size_t i = 0; i < rows; ++i) {
 		matrix[i].resize(columns, {0, 0});
 	}
 
@@ -251,3 +251,23 @@ void Matrix::orderRows() {
 	}
 }
 
+Matrix kroneckerProduct(Matrix matrix1, Matrix matrix2) {
+	size_t row1 = matrix1.getRows();
+	size_t column1 = matrix1.getColumns();
+	size_t row2 = matrix2.getRows();
+	size_t column2 = matrix2.getColumns();
+
+	Matrix resultMatrix(row1 * row2, column1 * column2);
+
+	for (size_t i = 0; i < row1; ++i) {
+		for (size_t j = 0; j < column1; ++j) {
+			for (size_t k = 0; k < row2; ++k) {
+				for (size_t l = 0; l < column2; ++l) {
+					resultMatrix[i * row2 + k][j * column2 + l] = matrix1[i][j] * matrix2[k][l];
+				}
+			}
+		}
+	}
+
+	return resultMatrix;
+}
