@@ -102,22 +102,24 @@ bool offDiagonalValues(Matrix A, std::complex<double> tolerance) {
 }
 
 Matrix algorithmQR(Matrix A) {
-        size_t maxIterations{500};
+        size_t maxIterations = 500;
 	std::complex<double> tolerance = {1e-10, 1e-10};
         Matrix accumulatedQ(A.identity());
 
+        std::vector<Matrix> QR_i;
         Matrix copyA(A);
+	Matrix Q_i(0, 0);
+	Matrix R_i(0, 0);
 
         for (size_t i = 0; i < maxIterations; ++i) {
 		if (offDiagonalValues(copyA, tolerance)) {
 			break;
 		}
 
-                std::vector<Matrix> QR_i;
 		QR_i = qrDecompose(copyA);
 
-                Matrix Q_i = QR_i[0];
-                Matrix R_i = QR_i[1];
+                Q_i = QR_i[0];
+                R_i = QR_i[1];
 
                 copyA = R_i * Q_i;
 
@@ -192,24 +194,28 @@ std::vector<Matrix> algorithmSVD(StateVector state) {
 
 std::vector<StateVector> extractQubitStates(StateVector state) {
 	size_t nQubits = static_cast<size_t>(std::log2(state.size()));
+	std::vector<Matrix> USV;
+	Matrix U(0, 0);
+	Matrix V(0, 0);
+	size_t width;
+
 	std::vector<StateVector> individualQubits;
 	individualQubits.reserve(nQubits);
-
+	StateVector firstQubitState(2);
 	StateVector copyState(state);
+	StateVector remainingQubitStates(0);
 
 	for (size_t i = 0; i < nQubits; ++i) {
-		std::vector<Matrix> USV;
 		USV = algorithmSVD(copyState);
-		Matrix& U(USV[0]);
-		Matrix& V(USV[2]);
+		U = USV[0];
+		V = USV[2];
 
-		StateVector firstQubitState(2);
 		firstQubitState[0] = U[0][0];
 		firstQubitState[1] = U[1][0];
 		individualQubits.push_back(firstQubitState);
 
-		size_t width = V.getRows();
-		StateVector remainingQubitStates(width);
+		width = V.getRows();
+		remainingQubitStates.resize(width);
 
 		for (size_t j = 0; j < width; ++j) {
 			remainingQubitStates[j] = V[j][0];

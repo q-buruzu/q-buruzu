@@ -1,20 +1,33 @@
 #include "hilbert.h"
-#include <iostream>
+#include "io_handler.h"
 #include "main_utils.h"
 #include "matrix.h"
 #include "schrodinger.h"
 
-/* StateVector tensorProduct(StateVector state1, StateVector state2) {
+#include <iostream>
+#include <thread>
+
+
+
+
+extern QuantumState* blud;
+
+
+StateVector tensorProduct(StateVector state1, StateVector state2) {
 	size_t dim1 = state1.size();
 	size_t dim2 = state2.size();
 
-	Matrix tensorProductResult;
+	StateVector resultVector(dim1 * dim2);
 
 	for (size_t i = 0; i < dim1; ++i) {
-		
+		for (size_t j = 0; j < dim2; ++j) {
+			resultVector[(i * dim2) + j] = state1[i] * state2[j];
+		}
 	}
+
+	return resultVector;
 }
-*/
+
 
 void printState(const StateVector &state) {
 	auto data = state.get();
@@ -35,12 +48,18 @@ void printStateList(const std::vector<StateVector> &list) {
 }
 
 int main() {
-	QuantumState yurt(3);
+/*
+	StateVector state1({{1, 1}, {1, 0}});
+	StateVector state2({{2, 1}, {1, 3}});
+	StateVector state3({{1, 0}, {0, 2}});
 
-	printState(yurt.get());
+	StateVector yurt(tensorProduct(tensorProduct(state1, state2), state3));
+
+	printState(yurt);
+	std::cout << "\n\n";
 
 	std::vector<StateVector> bart;
-	bart = extractQubitStates(yurt.get());
+	bart = extractQubitStates(yurt);
 
 	printStateList(bart);
 
@@ -51,5 +70,15 @@ int main() {
 	Matrix C(kroneckerProduct(A, B));
 	C.print();
 */
-	return 0;
+
+        initialize();
+
+        std::thread listener(inputListener);
+        listener.detach();
+
+        mainLoop();
+
+        delete blud;
+
+        return 0;
 }

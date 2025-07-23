@@ -3,6 +3,7 @@
 
 void initialize();
 void mainLoop();
+double timeOperation();
 void measure();
 
 #endif
