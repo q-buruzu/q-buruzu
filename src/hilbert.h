@@ -1,8 +1,12 @@
 #ifndef HILBERT_H
 #define HILBERT_H
 
+#include "matrix.h"
+
 #include <complex>
 #include <vector>
+
+class Matrix;
 
 class StateVector {
         public:
@@ -31,9 +35,12 @@ class HilbertSpace {
 		StateVector add(const StateVector& vector, const StateVector& otherVector) const;
 		StateVector scalarMultiply(std::complex<double> scalar, const StateVector& vector)const ;
 		std::complex<double> innerProduct(const StateVector& vector, const StateVector& otherVector) const;
+		Matrix outerProduct(const StateVector& vector, const StateVector& otherVector) const;
 		double norm(const StateVector& vector) const;
 		StateVector normalize(const StateVector& vector) const;
 		bool isCauchyConvergent(const std::vector<StateVector>& vectorSequence, double epsilon) const;
 };
+
+Matrix split(StateVector vector);
 
 #endif

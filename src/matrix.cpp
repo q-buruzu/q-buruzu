@@ -59,6 +59,24 @@ void Matrix::update() {
 	columns = matrix[0].size();
 }
 
+void Matrix::swapRows(size_t i, size_t j) {
+	if (i >= 0 && j >= 0 && i < getRows() && j < getRows()) {
+                std::swap(matrix[i], matrix[j]);
+        } else {
+                std::cout << "ERROR CANNOT SWAP NONEXISTENT ROWS";
+        }
+}
+
+void Matrix::swapColumns(size_t i, size_t j) {
+        if (i < getColumns() && j < getColumns()) {
+                std::cout << "ERROR CANNOT SWAP NONEXISTENT COLUMNS";
+        } else {
+                for (size_t k = 0; k < getRows(); ++k) {
+                        std::swap(matrix[k][i], matrix[k][j]);
+                }
+        }
+}
+
 Matrix Matrix::operator+(const Matrix& otherMatrix) const {
 	throwError(sameDimensions(*this, otherMatrix), "MATRICES MUST BE SAME SIZE (ADDITION)");
 
@@ -249,6 +267,23 @@ void Matrix::orderRows() {
 			std::swap(matrix[i], matrix[maxRow]);
 		}
 	}
+}
+
+Matrix identityPad(Matrix A, size_t size) {
+        if (A.getRows() == size) {
+                return A;
+        }
+
+        Matrix B(size, size);
+        B = B.identity();
+
+        for (size_t i = 0; i < A.getRows(); ++i) {
+                for (size_t j = 0; j < A.getColumns(); ++j) {
+                        B[i + (size - A.getRows())][j + (size - A.getColumns())] = A[i][j];
+                }
+        }
+
+        return B;
 }
 
 Matrix kroneckerProduct(Matrix matrix1, Matrix matrix2) {

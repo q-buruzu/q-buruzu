@@ -1,5 +1,6 @@
 #include "error_utils.h"
 #include "hilbert.h"
+#include "matrix.h"
 
 #include <cmath>
 #include <complex>
@@ -105,6 +106,18 @@ std::complex<double> HilbertSpace::innerProduct(const StateVector& vector, const
 	return innerProductValue;
 }
 
+Matrix HilbertSpace::outerProduct(const StateVector& vector, const StateVector& otherVector) const {
+        Matrix resultMatrix(vector.size(), vector.size());
+
+        for (size_t i = 0; i < vector.size(); ++i) {
+                for (size_t j = 0; j < vector.size(); ++j) {
+                        resultMatrix[i][j] = vector[i] * otherVector[j];
+                }
+        }
+
+        return resultMatrix;
+}
+
 double HilbertSpace::norm(const StateVector& vector) const {
 	return std::sqrt(std::real(innerProduct(vector, vector)));
 }
@@ -137,4 +150,16 @@ bool HilbertSpace::isCauchyConvergent(const std::vector<StateVector>& sequence, 
 	}
 
 	return true;
+}
+
+Matrix split(StateVector state) {
+        std::vector<std::complex<double>> vector = state.get();
+        Matrix resultMatrix(2, vector.size() / 2);
+
+        for (size_t i = 0; i < vector.size() / 2; ++i) {
+                resultMatrix[0][i] = vector[i];
+                resultMatrix[1][i] = vector[i + (vector.size() / 2)];
+        }
+
+        return resultMatrix;
 }

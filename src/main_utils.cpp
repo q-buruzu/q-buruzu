@@ -37,7 +37,7 @@ void initialize(){
         std::cout << "\n";
 
         blud = new QuantumState(qubits);
-        evolution = findEvolution(timeStep);
+        evolution = findEvolution(*blud, timeStep);
 
 	running = true;
 }

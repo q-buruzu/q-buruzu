@@ -2,6 +2,7 @@
 #include "hilbert.h"
 #include "matrix.h"
 #include "quantumstate.h"
+#include "random_generator.h"
 
 #include <cmath>
 #include <complex>

@@ -1,6 +1,9 @@
+#include "algorithms.h"
+#include "error_utils.h"
 #include "hilbert.h"
 #include "matrix.h"
 #include "quantumstate.h"
+#include "random_generator.h"
 #include "schrodinger.h"
 
 #include <complex>
@@ -10,233 +13,105 @@
 typedef std::complex<double> cd;
 
 double hBar = 1.054571817e-34;
+Matrix I({{{1, 0}, {0, 0}}, {{0, 0}, {1, 0}}});
+Matrix X({{{0, 0}, {1, 0}}, {{1, 0}, {0, 0}}});
+Matrix Y({{{0, 0}, {0, -1}}, {{0, 1}, {0, 0}}});
+Matrix Z({{{1, 0}, {0, 0}}, {{0, 0}, {-1, 0}}});
 
-Matrix split(StateVector state) {
-	std::vector<std::complex<double>> vector = state.get();
-	Matrix resultMatrix(2, vector.size() / 2);
+std::vector<StateVector> extractQubitStates(StateVector state) {
+        size_t nQubits = static_cast<size_t>(std::log2(state.size()));
+        std::vector<StateVector> individualQubits;
+        individualQubits.reserve(nQubits);
 
-	for (size_t i = 0; i < vector.size() / 2; ++i) {
-		resultMatrix[0][i] = vector[i];
-		resultMatrix[1][i] = vector[i + (vector.size() / 2)];
-	}
+        StateVector copyState(state);
+        HilbertSpace space;
 
-	return resultMatrix;
-}
+        for (size_t i = 0; i < nQubits; ++i) {
+                size_t qubitsLeft = nQubits - i;
 
-Matrix outerProduct(StateVector vector) {
-        Matrix resultMatrix(vector.size(), vector.size());
+                if (qubitsLeft == 1) {
+                        StateVector lastQubit(space.normalize(copyState.get()));
+                        individualQubits.push_back(lastQubit);
+                        break;
+                } else {
+                        std::vector<Matrix> USV;
+                        USV = algorithmSVD(copyState);
+                        Matrix& U(USV[0]);
+                        Matrix& sigma(USV[1]);
+                        Matrix& V(USV[2]);
 
-        for (size_t i = 0; i < vector.size(); ++i) {
-                for (size_t j = 0; j < vector.size(); ++j) {
-                        resultMatrix[i][j] = vector[i] * std::conj(vector[j]);
+                        StateVector firstQubitState(2);
+                        firstQubitState[0] = U[0][0];
+                        firstQubitState[1] = U[1][0];
+                        individualQubits.push_back(firstQubitState);
+
+                        size_t width = V.getRows();
+                        StateVector remainingQubitStates(width);
+
+                        for (size_t j = 0; j < width; ++j) {
+                                remainingQubitStates[j] = sigma[0][0] * V[j][0];
+                        }
+
+                        remainingQubitStates = space.normalize(remainingQubitStates);
+                        copyState.set(remainingQubitStates.get());
                 }
         }
+
+        return individualQubits;
+}
+
+Matrix findHamiltonian(std::vector<StateVector> qubits) {
+        std::vector<Matrix> pauliStrings;
+        std::vector<size_t> chosenQubits;
+        std::vector<Matrix> gates({I, X, Y, Z});
+        size_t otherQubit;
+        bool alreadyChosen = false;
+	HilbertSpace space;
+
+        for (size_t i = 0; i < qubits.size(); ++i) {
+                for (size_t j = 0; j < chosenQubits.size(); ++j) {
+                        if (i == chosenQubits[j]) {
+                                alreadyChosen = true;
+                                break;
+                        }
+                }
+
+                if (!randChooseQubit() || alreadyChosen) {
+                        alreadyChosen = false;
+                        continue;
+                }
+
+                otherQubit = (i + randDeviationChoose() + qubits.size()) % qubits.size();
+
+                pauliStrings.push_back(space.outerProduct((gates[randChooseGate()] * qubits[i]), (gates[randChooseGate()]) * qubits[otherQubit]));
+
+                chosenQubits.push_back(i);
+                chosenQubits.push_back(otherQubit);
+        }
+
+        Matrix resultMatrix(0, 0);
+
+        if (pauliStrings.size() != 0) {
+                for (size_t i = 0; i < pauliStrings.size(); ++i) {
+                        resultMatrix = resultMatrix + pauliStrings[i];
+                }
+        }
+
+        // handle nonchosen qubits
 
         return resultMatrix;
 }
 
-Matrix identityPad(Matrix A, size_t size) {
-	if (A.getRows() == size) {
-		return A;
-	}
+Matrix findEvolution(QuantumState system, double step) {
+        // Matrix O(findHamiltonian(extractQubitStates(system.get())));
+        Matrix O({{{1, 0}, {0, 1}}, {{0, 1}, {1, 0}}});
 
-	Matrix B(size, size);
-	B = B.identity();
-
-	for (size_t i = 0; i < A.getRows(); ++i) {
-		for (size_t j = 0; j < A.getColumns(); ++j) {
-			B[i + (size - A.getRows())][j + (size - A.getColumns())] = A[i][j];
-		}
-	}
-
-	return B;
-}
-
-std::vector<Matrix> qrDecompose(Matrix A) {
-	size_t k;
-	StateVector state({cd{0, 0}});
-	HilbertSpace space;
-
-	Matrix H({{cd{0, 0}}});
-	Matrix Q(A.getRows(), A.getRows());
-	Q = Q.identity();
-
-	for (size_t i = 0; i < A.getRows() - 1; ++i) {
-		k = A.getRows() - i;
-		state.resize(k);
-		H.resize(k, k);
-
-		for (size_t j = 0; j < k; ++j) {
-			state[j] = A[j + i][i];
-		}
-
-		state[0] += (state[0] / std::abs(state[0])) * space.norm(state);
-
-		H = H.identity() + ((outerProduct(state) * cd{-2, 0}) * (cd{1, 0} / space.innerProduct(state, state)));
-
-		H = identityPad(H, A.getRows());
-
-		A = H * A;
-		Q = Q * H;
-	}
-
-	return std::vector<Matrix>{Q, A};
-}
-
-bool offDiagonalValues(Matrix A, std::complex<double> tolerance) {
-        std::complex<double> sum{0, 0};
-
-        for (size_t i = 0; i < A.getRows(); ++i) {
-                for (size_t j = 0; j < A.getColumns(); ++j) {
-                        if (i != j) {
-                                sum += A[i][j];
-                        }
-                }
-        }
-
-	if (std::real(sum) < std::real(tolerance) && std::imag(sum) < std::imag(tolerance)) {
-                return true;
-        }
-
-        return false;
-}
-
-Matrix algorithmQR(Matrix A) {
-        size_t maxIterations = 500;
-	std::complex<double> tolerance = {1e-10, 1e-10};
-        Matrix accumulatedQ(A.identity());
-
-        std::vector<Matrix> QR_i;
-        Matrix copyA(A);
-	Matrix Q_i(0, 0);
-	Matrix R_i(0, 0);
-
-        for (size_t i = 0; i < maxIterations; ++i) {
-		if (offDiagonalValues(copyA, tolerance)) {
-			break;
-		}
-
-		QR_i = qrDecompose(copyA);
-
-                Q_i = QR_i[0];
-                R_i = QR_i[1];
-
-                copyA = R_i * Q_i;
-
-		accumulatedQ = accumulatedQ * Q_i;
-        }
-
-        return accumulatedQ;
-}
-
-std::vector<Matrix> algorithmSVD(StateVector state) {
-	HilbertSpace space;
-        Matrix A(split(state));
-        Matrix B(A * A.conjugate().transpose());
-
-        std::complex<double> B_trace = B[0][0] + B[1][1];
-        std::complex<double> B_determinant = B[0][0] * B[1][1] - B[0][1] * std::conj(B[0][1]);
-        std::complex<double> eigenvalue1 = (B_trace + std::sqrt(pow(B_trace, 2) - cd{4, 0} * B_determinant)) / cd{2, 0};
-        std::complex<double> eigenvalue2 = (B_trace - std::sqrt(pow(B_trace, 2) - cd{4, 0} * B_determinant)) / cd{2, 0};
-
-        StateVector eigenvector1(2);
-        StateVector eigenvector2(2);
-
-        if (std::abs(B[0][1]) > std::abs(eigenvalue1 - B[0][0])) {
-                eigenvector1[0] = B[0][1];
-                eigenvector1[1] = eigenvalue1 - B[0][0];
-
-                space.normalize(eigenvector1);
-
-                eigenvector2[0] = cd{-1, 0} * std::conj(eigenvalue1 - B[0][0]);
-                eigenvector2[1] = std::conj(B[0][1]);
-        } else {
-                eigenvector1[0] = eigenvalue1 - B[1][1];
-                eigenvector1[1] = std::conj(B[0][1]);
-
-		space.normalize(eigenvector1);
-
-		eigenvector2[0] = cd{-1, 0} * std::conj(B[0][1]);
-                eigenvector2[1] = std::conj(eigenvalue1 - B[1][1]);
-        }
-
-	Matrix U(2, 2);
-	U[0][0] = eigenvector1[0];
-        U[0][1] = eigenvector2[0];
-        U[1][0] = eigenvector1[1];
-        U[1][1] = eigenvector2[1];
-
-        std::complex<double> singularValue1 = std::sqrt(eigenvalue1);
-        std::complex<double> singularValue2 = std::sqrt(eigenvalue2);
-
-        Matrix sigma(A);
-	size_t rowCheck = sigma.getRows();
-	size_t columnCheck = sigma.getColumns();
-
-	for (size_t i = 0; i < rowCheck; ++i) {
-                for (size_t j = 0; j < columnCheck; ++j) {
-                        sigma[i][j] = {0, 0};
-                }
-        }
-
-        if (columnCheck > 0) {
-		sigma[0][0] = singularValue1;
-	}
-
-	if (rowCheck > 1 && columnCheck > 1) {
-        	sigma[1][1] = singularValue2;
-	}
-
-	Matrix V(algorithmQR(A.conjugate().transpose() * A).conjugate().transpose());
-
-	return std::vector<Matrix>{U, sigma, V};
-}
-
-std::vector<StateVector> extractQubitStates(StateVector state) {
-	size_t nQubits = static_cast<size_t>(std::log2(state.size()));
-	std::vector<Matrix> USV;
-	Matrix U(0, 0);
-	Matrix V(0, 0);
-	size_t width;
-
-	std::vector<StateVector> individualQubits;
-	individualQubits.reserve(nQubits);
-	StateVector firstQubitState(2);
-	StateVector copyState(state);
-	StateVector remainingQubitStates(0);
-
-	for (size_t i = 0; i < nQubits; ++i) {
-		USV = algorithmSVD(copyState);
-		U = USV[0];
-		V = USV[2];
-
-		firstQubitState[0] = U[0][0];
-		firstQubitState[1] = U[1][0];
-		individualQubits.push_back(firstQubitState);
-
-		width = V.getRows();
-		remainingQubitStates.resize(width);
-
-		for (size_t j = 0; j < width; ++j) {
-			remainingQubitStates[j] = V[j][0];
-		}
-
-		copyState.set(remainingQubitStates.get());
-	}
-
-	return individualQubits;
-}
-
-Matrix findEvolution(double step) {
-	Matrix O({{cd{1, 0}, cd{0, 1}}, {cd{0, 1}, cd{1, 0}}});
-
-	O = (((O * cd{step, 0}) * cd{0, 1}) * cd{1 / hBar, 0}) * cd{-1, 0};
-
+        O = (((O * cd{step, 0}) * cd{0, 1}) * cd{1 / hBar, 0}) * cd{-1, 0};
 	O = O.identity() + O;
 
-	return O;
+        return O;
 }
 
 void evolve(QuantumState state, Matrix evolution) {
-	state.set(evolution * state.get());
+        state.set(evolution * state.get());
 }

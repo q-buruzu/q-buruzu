@@ -6,6 +6,8 @@
 #include <complex>
 #include <vector>
 
+class StateVector;
+
 class Matrix {
 	public:
 		Matrix(std::vector<std::vector<std::complex<double>>> initMatrix);
@@ -17,6 +19,8 @@ class Matrix {
 		void resize(size_t rows, size_t columns);
 		size_t getRows() const;
 		size_t getColumns() const;
+		void swapRows(size_t i, size_t j);
+		void swapColumns(size_t i, size_t j);
 		Matrix identity() const;
 		void roundValues();
 		void print() const;
@@ -40,6 +44,7 @@ class Matrix {
 		void orderRows();
 };
 
+Matrix identityPad(Matrix A, size_t size);
 Matrix kroneckerProduct(Matrix matrix1, Matrix matrix2);
 
 #endif
